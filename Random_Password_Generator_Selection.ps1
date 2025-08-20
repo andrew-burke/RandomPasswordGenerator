@@ -3,7 +3,7 @@ Add-Type -AssemblyName System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.Text = 'Random Password Generator'
 $main_form.Width = 400
-$main_form.Height = 200
+$main_form.Height = 220
 $main_form.AutoSize = $false
 $main_form.TopMost = $true
 $main_form.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
@@ -22,7 +22,7 @@ $LabelWords.Location = New-Object System.Drawing.Size(110, 22)
 $LabelWords.Size = New-Object System.Drawing.Size(60, 23)
 $main_form.Controls.Add($LabelWords)
 
-# ComboBox: Order (now second selector)
+# ComboBox: Order (second selector)
 $ComboOrder = New-Object System.Windows.Forms.ComboBox
 $ComboOrder.Location = New-Object System.Drawing.Size(20, 60)
 $ComboOrder.Size = New-Object System.Drawing.Size(80, 23)
@@ -62,7 +62,7 @@ $ComboAltDigits.Visible = $false
 $main_form.Controls.Add($ComboAltDigits)
 
 $LabelAltDigits = New-Object System.Windows.Forms.Label
-$LabelAltDigits.Text = "Digits per alternate"
+$LabelAltDigits.Text = "Digits to alternate"
 $LabelAltDigits.Location = New-Object System.Drawing.Size(110, 102)
 $LabelAltDigits.Size = New-Object System.Drawing.Size(120, 23)
 $LabelAltDigits.Visible = $false
@@ -83,13 +83,6 @@ $ComboOrder.Add_SelectedIndexChanged({
     }
 })
 
-# Button: Generate Password
-$ButtonGenPW = New-Object System.Windows.Forms.Button
-$ButtonGenPW.Location = New-Object System.Drawing.Size(200, 20)
-$ButtonGenPW.Size = New-Object System.Drawing.Size(150, 23)
-$ButtonGenPW.Text = "Generate Password"
-$main_form.Controls.Add($ButtonGenPW)
-
 # TextBox: Password Output
 $LabelGenPW = New-Object System.Windows.Forms.TextBox
 $LabelGenPW.Text = "Password Generator"
@@ -99,12 +92,22 @@ $LabelGenPW.ReadOnly = $true
 $LabelGenPW.AutoSize = $false
 $main_form.Controls.Add($LabelGenPW)
 
-# Button: Copy to Clipboard
+# Button: Generate Password
+$ButtonGenPW = New-Object System.Windows.Forms.Button
+$ButtonGenPW.Location = New-Object System.Drawing.Size(200, 20)
+$ButtonGenPW.Size = New-Object System.Drawing.Size(150, 23)
+$ButtonGenPW.Text = "Generate Password"
+$main_form.Controls.Add($ButtonGenPW)
+
+# Button: Copy to Clipboard (always below password textbox)
 $ButtonClipPW = New-Object System.Windows.Forms.Button
-$ButtonClipPW.Location = New-Object System.Drawing.Size(200, 100)
+$ButtonClipPW.Location = New-Object System.Drawing.Size(200, 95)
 $ButtonClipPW.Size = New-Object System.Drawing.Size(150, 23)
 $ButtonClipPW.Text = "Copy to Clipboard"
 $main_form.Controls.Add($ButtonClipPW)
+
+# Bring "Copy to Clipboard" button to the front
+$ButtonClipPW.BringToFront()
 
 # Load wordlist once
 $WordListPath = "wordlist.txt"
@@ -126,11 +129,25 @@ $ButtonGenPW.Add_Click({
         $altDigits = $null
     }
 
+    # Use .NET Secure RNG for digits
+    $rng = New-Object System.Security.Cryptography.RNGCryptoServiceProvider
+    function Get-SecureRandomDigit {
+        $byte = New-Object 'Byte[]' 1
+        do {
+            $rng.GetBytes($byte)
+            $value = $byte[0] % 10
+        } while ($byte[0] -ge 250) # avoid modulo bias
+        return $value
+    }
+
     $words = @()
     for ($i=0; $i -lt $numWords; $i++) {
         $words += ((Get-Culture).TextInfo).ToTitleCase(($WordList | Get-Random))
     }
-    $digits = -join (1..$numDigits | ForEach-Object { Get-Random -Minimum 0 -Maximum 9 })
+    $digits = ""
+    for ($i=0; $i -lt $numDigits; $i++) {
+        $digits += Get-SecureRandomDigit
+    }
 
     switch ($order) {
         "WordsFirst"   { $Password = ($words -join "") + $digits }
