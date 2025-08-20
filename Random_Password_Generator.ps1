@@ -33,9 +33,8 @@ $main_form.Controls.Add($ButtonClipPW)
 
 $ButtonGenPW.Add_Click(
     {
-        $WordList1 = @(get-content wordlist1.txt)
-        $WordList2 = @(get-content wordlist2.txt)
-        $Words = ((Get-Culture).TextInfo).ToTitleCase((($wordlist1 | Get-Random -count 1 ))) + ((Get-Culture).TextInfo).ToTitleCase((($wordlist2 | Get-Random -count 1 )))
+        $WordList = @(get-content wordlist.txt)
+        $Words = ((Get-Culture).TextInfo).ToTitleCase((($wordlist | Get-Random -count 1 ))) + ((Get-Culture).TextInfo).ToTitleCase((($wordlist | Get-Random -count 1 )))
         $RandomGenPassword = $words + ( Get-Random -Minimum 100 -Maximum 999 )
         $LabelGenPW.Text =  $RandomGenPassword
     }
