@@ -31,6 +31,8 @@ $ButtonClipPW.Size = New-Object System.Drawing.Size(120,23)
 $ButtonClipPW.Text = "Copy to Clipboard"
 $main_form.Controls.Add($ButtonClipPW)
 
+
+
 $ButtonGenPW.Add_Click(
     {
         $WordList = @(get-content wordlist.txt)
